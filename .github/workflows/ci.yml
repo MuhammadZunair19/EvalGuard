@@ -1,0 +1,75 @@
+name: Quality Gates
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend-ci-safe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ".[dev]"
+      - name: Lint backend
+        run: ruff check backend tests
+      - name: Run deterministic API and AI QA
+        run: pytest -m "not slow and not e2e" --cov=backend.app --cov-report=term-missing
+
+  frontend-quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+
+  newman-contracts:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: evalguard
+          POSTGRES_USER: evalguard
+          POSTGRES_PASSWORD: evalguard
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U evalguard"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://evalguard:evalguard@localhost:5432/evalguard
+      PROVIDER_MODE: deterministic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pip install ".[dev]"
+      - run: alembic -c backend/alembic.ini upgrade head
+      - name: Start API
+        run: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 &
+      - name: Wait for API
+        run: for i in {1..20}; do curl -sf http://localhost:8000/api/v1/health && exit 0; sleep 1; done; exit 1
+      - run: npx --yes newman@6.2.1 run postman/EvalGuard.postman_collection.json --env-var baseUrl=http://localhost:8000/api/v1
+
