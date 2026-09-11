@@ -1,10 +1,12 @@
 from fastapi import APIRouter
 
 from backend.app.api.documents import router as documents_router
+from backend.app.api.evaluation import router as evaluation_router
 from backend.app.api.rag import router as rag_router
 
 router = APIRouter()
 router.include_router(documents_router)
+router.include_router(evaluation_router)
 router.include_router(rag_router)
 
 
