@@ -1,0 +1,42 @@
+{
+  "info": {
+    "name": "EvalGuard API QA",
+    "description": "Newman-safe smoke and contract checks for the EvalGuard API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [{ "key": "baseUrl", "value": "http://localhost:8000/api/v1" }],
+  "item": [
+    {
+      "name": "System",
+      "item": [{
+        "name": "Health check",
+        "request": { "method": "GET", "url": "{{baseUrl}}/health" },
+        "event": [{ "listen": "test", "script": { "exec": ["pm.test('API is healthy', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('healthy'); });"] } }]
+      }]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        { "name": "List documents", "request": { "method": "GET", "url": "{{baseUrl}}/documents" }, "event": [{ "listen": "test", "script": { "exec": ["pm.test('Returns a document array', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"] } }] },
+        { "name": "Upload invalid format", "request": { "method": "POST", "header": [], "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "postman/fixtures/invalid.json" }] }, "url": "{{baseUrl}}/documents" }, "event": [{ "listen": "test", "script": { "exec": ["pm.test('Rejects invalid files', () => { pm.response.to.have.status(400); pm.expect(pm.response.json().error.code).to.eql('INVALID_DOCUMENT'); });"] } }] }
+      ]
+    },
+    {
+      "name": "RAG",
+      "item": [{
+        "name": "Query rejects empty question",
+        "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"question\":\"\",\"top_k\":0}" }, "url": "{{baseUrl}}/rag/query" },
+        "event": [{ "listen": "test", "script": { "exec": ["pm.test('Returns structured validation error', () => { pm.response.to.have.status(422); pm.expect(pm.response.json().error.code).to.eql('VALIDATION_ERROR'); });"] } }]
+      }]
+    },
+    {
+      "name": "Evaluation",
+      "item": [
+        { "name": "List datasets", "request": { "method": "GET", "url": "{{baseUrl}}/datasets" }, "event": [{ "listen": "test", "script": { "exec": ["pm.test('Datasets contract', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"] } }] },
+        { "name": "List evaluation runs", "request": { "method": "GET", "url": "{{baseUrl}}/evaluation-runs" }, "event": [{ "listen": "test", "script": { "exec": ["pm.test('Runs contract', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"] } }] },
+        { "name": "Dashboard report", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard" }, "event": [{ "listen": "test", "script": { "exec": ["pm.test('Quality summary is measurable', () => { pm.response.to.have.status(200); const body=pm.response.json(); pm.expect(body).to.have.properties('total_runs','latest_pass_rate','hallucination_rate','p95_latency_ms'); });"] } }] }
+      ]
+    }
+  ]
+}
+
