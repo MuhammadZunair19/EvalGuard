@@ -1,5 +1,6 @@
 import asyncio
 from io import BytesIO
+from pathlib import Path
 
 from sqlalchemy import select
 from starlette.datastructures import Headers, UploadFile
@@ -10,6 +11,8 @@ from backend.app.db.session import SessionFactory
 from backend.app.models.entities import EvaluationDataset, PromptVersion, QualityThreshold, TestCase
 from backend.app.schemas.evaluation import DEFAULT_THRESHOLDS
 from backend.app.services.documents import DocumentService
+
+DEMO_HANDBOOK = Path(__file__).resolve().parents[1] / "data" / "demo" / "employee_handbook.md"
 
 CASES = [
     (
@@ -105,10 +108,7 @@ async def seed() -> None:
         if existing:
             print("Demo data already exists.")
             return
-        handbook = settings.upload_path.parent / "demo" / "employee_handbook.md"
-        if not handbook.exists():
-            handbook = settings.upload_path.parent / "demo" / "employee_handbook.md"
-        content = handbook.read_bytes()
+        content = await asyncio.to_thread(DEMO_HANDBOOK.read_bytes)
         upload = UploadFile(
             BytesIO(content),
             filename="employee_handbook.md",

@@ -19,7 +19,7 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       DATABASE_URL: postgresql+asyncpg://evalguard:evalguard@postgres:5432/evalguard
-      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       CHROMA_PATH: /app/runtime/chroma
       UPLOAD_PATH: /app/runtime/uploads
     ports: ["8000:8000"]
