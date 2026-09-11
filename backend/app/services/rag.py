@@ -15,17 +15,23 @@ class RAGService:
         self.embeddings = embeddings
         self.vectors = vectors
 
-    async def query(self, question: str, top_k: int) -> RAGResponse:
+    async def query(
+        self,
+        question: str,
+        top_k: int,
+        system_prompt: str = SYSTEM_PROMPT,
+        prompt_template: str = PROMPT_TEMPLATE,
+    ) -> RAGResponse:
         started = perf_counter()
         embedding = (await self.embeddings.embed([question]))[0]
         records = await self.vectors.query(embedding, top_k)
         retrieved = perf_counter()
         context = "\n\n".join(f"[{index}] {item.text}" for index, item in enumerate(records, 1))
         answer = await self.llm.generate(
-            PROMPT_TEMPLATE.format(
+            prompt_template.format(
                 context=context or "No relevant context was retrieved.", question=question
             ),
-            SYSTEM_PROMPT,
+            system_prompt,
         )
         finished = perf_counter()
         sources = [

@@ -24,12 +24,14 @@ from backend.app.models.entities import (
     EvaluationDataset,
     EvaluationRun,
     MetricResult,
+    PromptVersion,
+    QualityThreshold,
     RunStatus,
     TestCase,
     TestResult,
 )
-from backend.app.schemas.evaluation import EvaluationRunCreate
-from backend.app.services.rag import RAGService
+from backend.app.schemas.evaluation import DEFAULT_THRESHOLDS, EvaluationRunCreate
+from backend.app.services.rag import PROMPT_TEMPLATE, SYSTEM_PROMPT, RAGService
 
 logger = structlog.get_logger()
 
@@ -49,6 +51,11 @@ class EvaluationService:
         self.session, self.rag, self.settings = session, rag, settings
 
     async def execute(self, request: EvaluationRunCreate) -> EvaluationRun:
+        if request.model != self.settings.ollama_model:
+            raise AppError(
+                "MODEL_NOT_CONFIGURED",
+                f"The active provider is configured for {self.settings.ollama_model}.",
+            )
         dataset = await self.session.get(EvaluationDataset, request.dataset_id)
         if dataset is None:
             raise AppError("DATASET_NOT_FOUND", "Evaluation dataset was not found.", 404)
@@ -63,7 +70,12 @@ class EvaluationService:
         )
         if not cases:
             raise AppError("EMPTY_DATASET", "The evaluation dataset contains no test cases.")
-        thresholds = {**request.thresholds}
+        prompt = None
+        if request.prompt_version_id:
+            prompt = await self.session.get(PromptVersion, request.prompt_version_id)
+            if prompt is None:
+                raise AppError("PROMPT_NOT_FOUND", "Prompt version was not found.", 404)
+        thresholds = await self._resolve_thresholds(request.thresholds)
         run = EvaluationRun(
             dataset_id=dataset.id,
             prompt_version_id=request.prompt_version_id,
@@ -83,7 +95,13 @@ class EvaluationService:
         latencies, passed_count = [], 0
         for case in cases:
             rag_outputs = [
-                await self.rag.query(case.question, request.top_k) for _ in range(case.repetitions)
+                await self.rag.query(
+                    case.question,
+                    request.top_k,
+                    system_prompt=prompt.system_prompt if prompt else SYSTEM_PROMPT,
+                    prompt_template=prompt.template if prompt else PROMPT_TEMPLATE,
+                )
+                for _ in range(case.repetitions)
             ]
             response = rag_outputs[0]
             contexts = [source.content for source in response.sources]
@@ -167,6 +185,12 @@ class EvaluationService:
         await self.session.refresh(run)
         logger.info("test_run_completed", run_id=run.id, status=run.status)
         return run
+
+    async def _resolve_thresholds(self, requested: dict[str, float] | None) -> dict[str, float]:
+        if requested is not None:
+            return {**DEFAULT_THRESHOLDS, **requested}
+        configured = list((await self.session.scalars(select(QualityThreshold))).all())
+        return {**DEFAULT_THRESHOLDS, **{gate.name: gate.value for gate in configured}}
 
     @staticmethod
     def _summary(metrics, retrieval, latencies):

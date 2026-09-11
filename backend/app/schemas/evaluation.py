@@ -105,7 +105,7 @@ class EvaluationRunCreate(BaseModel):
     prompt_version_id: str | None = None
     top_k: int = Field(default=5, ge=1, le=20)
     model: str = "llama3.1:8b"
-    thresholds: dict[str, float] = Field(default_factory=lambda: DEFAULT_THRESHOLDS.copy())
+    thresholds: dict[str, float] | None = None
 
 
 class EvaluationRunResponse(BaseModel):
@@ -132,6 +132,12 @@ class PromptCreate(BaseModel):
     system_prompt: str
     template: str
     version: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    def validate_template_variables(self):
+        if "{context}" not in self.template or "{question}" not in self.template:
+            raise ValueError("template must contain {context} and {question}")
+        return self
 
 
 class PromptResponse(PromptCreate):
