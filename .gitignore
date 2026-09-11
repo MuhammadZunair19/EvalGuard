@@ -7,9 +7,10 @@ __pycache__/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
-backend/data/
+backend/data/*
+!backend/data/demo/
+!backend/data/demo/**
 frontend/.next/
 frontend/node_modules/
 frontend/playwright-report/
 frontend/test-results/
-
