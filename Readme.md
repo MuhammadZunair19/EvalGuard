@@ -55,71 +55,126 @@ Python 3.12, FastAPI, Pydantic, SQLAlchemy 2, PostgreSQL, Alembic, LangChain, Ol
 
 The production provider mode is fully local and requires no paid API.
 
-## Quick start
+## Installation and startup
 
-### Prerequisites
+Choose either the Docker path or the local-development path. Do not combine their PostgreSQL/backend processes on the same ports.
 
-- Python 3.12
-- Node.js 22 and pnpm
-- PostgreSQL 16
-- Ollama
+### Option A: Docker Compose
 
-Copy `.env.example` to `.env`, then adjust connection paths if needed.
+Prerequisites: Docker Desktop with Compose and Ollama installed on the host.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -e ".[dev,local-ai]"
-docker compose up -d postgres
-alembic -c backend/alembic.ini upgrade head
-```
+1. Start Ollama and download the model:
 
-### Ollama setup
+   ```bash
+   ollama serve
+   ollama pull llama3.1:8b
+   ```
 
-```bash
-ollama serve
-ollama pull llama3.1:8b
-```
+2. From the repository root, build and start the application:
 
-Ollama can alternatively be started from Compose:
+   ```bash
+   docker compose up --build -d
+   docker compose ps
+   ```
 
-```bash
-docker compose --profile local-ai up -d ollama
-```
+3. Seed the knowledge base and evaluation suite after the backend is healthy:
 
-### Seed the demonstration
+   ```bash
+   docker compose exec backend python -m backend.scripts.seed
+   ```
 
-```bash
-python -m backend.scripts.seed
-```
+4. Open the services:
 
-This indexes the fictional employee handbook and creates one versioned grounded-QA prompt, the default quality gates, and 25 evaluation cases. Running the command again is safe; it does not duplicate the dataset.
+   - Dashboard: [http://localhost:3000](http://localhost:3000)
+   - API documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
+   - API health: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
 
-### Run the application
+The first seed can take longer while `all-MiniLM-L6-v2` is downloaded. Application state is retained in named Docker volumes. Stop services with `docker compose down`; add `-v` only when you intentionally want to erase the local database and indexes.
 
-Terminal 1:
+To run Ollama in Docker instead of on the host, set `OLLAMA_BASE_URL=http://ollama:11434` in `.env`, then run `docker compose --profile local-ai up --build -d`.
 
-```bash
-uvicorn backend.app.main:app --reload
-```
+### Option B: local development
 
-Terminal 2:
+Prerequisites: Python 3.12, Node.js 22, pnpm, PostgreSQL 16, and Ollama.
 
-```bash
-cd frontend
-pnpm install
-pnpm dev
-```
+1. Create the environment file:
 
-Open [http://localhost:3000](http://localhost:3000). API documentation is available at [http://localhost:8000/docs](http://localhost:8000/docs).
+   macOS/Linux:
 
-To run the application services in containers instead:
+   ```bash
+   cp .env.example .env
+   ```
 
-```bash
-docker compose up --build
-```
+   Windows PowerShell:
 
-Ollama normally runs on the host so its model cache and hardware acceleration can be managed independently.
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+2. Create a Python environment and install backend dependencies.
+
+   macOS/Linux:
+
+   ```bash
+   python3.12 -m venv .venv
+   source .venv/bin/activate
+   python -m pip install --upgrade pip
+   pip install -e ".[dev,local-ai]"
+   ```
+
+   Windows PowerShell:
+
+   ```powershell
+   py -3.12 -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   python -m pip install --upgrade pip
+   pip install -e ".[dev,local-ai]"
+   ```
+
+3. Start PostgreSQL. The quickest development option is:
+
+   ```bash
+   docker compose up -d postgres
+   ```
+
+   If PostgreSQL is installed directly, create an `evalguard` database/user and update `DATABASE_URL` in `.env`.
+
+4. Start Ollama in a separate terminal and ensure the configured model is present:
+
+   ```bash
+   ollama serve
+   ollama pull llama3.1:8b
+   ollama list
+   ```
+
+5. Apply the schema and seed the demonstration data:
+
+   ```bash
+   alembic -c backend/alembic.ini upgrade head
+   python -m backend.scripts.seed
+   ```
+
+6. Start the backend from the repository root:
+
+   ```bash
+   uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+   ```
+
+7. In another terminal, install and start the frontend:
+
+   ```bash
+   cd frontend
+   pnpm install --frozen-lockfile
+   pnpm dev
+   ```
+
+8. Open [http://localhost:3000](http://localhost:3000) and verify [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health) returns `{"status":"healthy","service":"evalguard-api"}`.
+
+The seed command indexes the fictional employee handbook and creates one grounded-QA prompt version, the default quality gates, and 25 evaluation cases. It is idempotent and does not duplicate the dataset.
+
+### Run without local AI dependencies
+
+For API development or CI-style checks, set `PROVIDER_MODE=deterministic` in `.env`, install `.[dev]`, and skip Ollama. This mode is deterministic and is not a substitute for the real local-AI evaluation demo.
 
 ## Quality metrics
 
@@ -262,4 +317,3 @@ Capture the dashboard overview, a failed hallucination detail, and a baseline co
 - exportable JSON/JUnit quality reports
 - production object storage for uploaded documents
 - longitudinal alerting integrations for quality regressions
-
