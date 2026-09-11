@@ -23,4 +23,3 @@ def classify_failure(
     if not metrics["citation_validation"].passed:
         return "Citation Failure"
     return None
-

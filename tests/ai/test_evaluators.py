@@ -1,7 +1,13 @@
 import pytest
 
 from backend.app.evaluation.classification import classify_failure
-from backend.app.evaluators import AnswerRelevanceEvaluator, CitationValidator, CorrectnessEvaluator, FaithfulnessEvaluator, HallucinationEvaluator
+from backend.app.evaluators import (
+    AnswerRelevanceEvaluator,
+    CitationValidator,
+    CorrectnessEvaluator,
+    FaithfulnessEvaluator,
+    HallucinationEvaluator,
+)
 from backend.app.evaluators.base import EvaluationInput
 
 
@@ -48,4 +54,3 @@ def test_wrong_answer_with_correct_retrieval_is_generation_failure():
         "citation_validation": CitationValidator().evaluate(item, 1),
     }
     assert classify_failure(metrics, 1, 100, 3000, "factual") == "Generation Failure"
-

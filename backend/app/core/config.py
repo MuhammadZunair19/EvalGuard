@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.1:8b"
     embedding_model: str = "all-MiniLM-L6-v2"
+    provider_mode: str = "local"
     chroma_path: Path = Path("backend/data/chroma")
     upload_path: Path = Path("backend/data/uploads")
     default_top_k: int = Field(default=5, ge=1, le=20)
@@ -23,4 +24,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

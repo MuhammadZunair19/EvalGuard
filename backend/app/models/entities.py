@@ -2,7 +2,17 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, JSON, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base, UUIDTimestampMixin
@@ -53,7 +63,9 @@ class EvaluationDataset(UUIDTimestampMixin, Base):
 class TestCase(UUIDTimestampMixin, Base):
     __tablename__ = "test_cases"
 
-    dataset_id: Mapped[str] = mapped_column(ForeignKey("evaluation_datasets.id", ondelete="CASCADE"))
+    dataset_id: Mapped[str] = mapped_column(
+        ForeignKey("evaluation_datasets.id", ondelete="CASCADE")
+    )
     category: Mapped[str] = mapped_column(String(80))
     question: Mapped[str] = mapped_column(Text)
     expected_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -81,7 +93,9 @@ class EvaluationRun(UUIDTimestampMixin, Base):
     __tablename__ = "evaluation_runs"
 
     dataset_id: Mapped[str] = mapped_column(ForeignKey("evaluation_datasets.id"))
-    prompt_version_id: Mapped[str | None] = mapped_column(ForeignKey("prompt_versions.id"), nullable=True)
+    prompt_version_id: Mapped[str | None] = mapped_column(
+        ForeignKey("prompt_versions.id"), nullable=True
+    )
     model: Mapped[str] = mapped_column(String(120))
     embedding_model: Mapped[str] = mapped_column(String(120))
     top_k: Mapped[int] = mapped_column(Integer)
@@ -128,4 +142,3 @@ class QualityThreshold(UUIDTimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(80), unique=True)
     value: Mapped[float] = mapped_column(Float)
     comparator: Mapped[str] = mapped_column(String(8), default=">=")
-

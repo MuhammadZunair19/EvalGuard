@@ -6,7 +6,13 @@ import pytest
 async def test_document_upload_index_and_query(client):
     uploaded = await client.post(
         "/api/v1/documents",
-        files={"file": ("employee_handbook.md", b"Employees receive 25 annual leave days per year.", "text/markdown")},
+        files={
+            "file": (
+                "employee_handbook.md",
+                b"Employees receive 25 annual leave days per year.",
+                "text/markdown",
+            )
+        },
     )
     assert uploaded.status_code == 201
     document = uploaded.json()
@@ -16,7 +22,10 @@ async def test_document_upload_index_and_query(client):
     assert indexed.status_code == 200
     assert indexed.json()["chunk_count"] == 1
 
-    response = await client.post("/api/v1/rag/query", json={"question": "How many annual leave days do employees receive?", "top_k": 3})
+    response = await client.post(
+        "/api/v1/rag/query",
+        json={"question": "How many annual leave days do employees receive?", "top_k": 3},
+    )
     assert response.status_code == 200
     body = response.json()
     assert "25" in body["answer"]
@@ -27,7 +36,9 @@ async def test_document_upload_index_and_query(client):
 @pytest.mark.api
 @pytest.mark.asyncio
 async def test_rejects_invalid_and_empty_documents(client):
-    invalid = await client.post("/api/v1/documents", files={"file": ("payload.exe", b"x", "application/octet-stream")})
+    invalid = await client.post(
+        "/api/v1/documents", files={"file": ("payload.exe", b"x", "application/octet-stream")}
+    )
     assert invalid.status_code == 400
     assert invalid.json()["error"]["code"] == "INVALID_DOCUMENT"
     empty = await client.post("/api/v1/documents", files={"file": ("empty.txt", b"", "text/plain")})
@@ -41,4 +52,3 @@ async def test_query_validation_is_structured(client):
     response = await client.post("/api/v1/rag/query", json={"question": "", "top_k": 0})
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "VALIDATION_ERROR"
-

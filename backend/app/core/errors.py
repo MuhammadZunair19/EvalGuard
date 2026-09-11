@@ -31,4 +31,3 @@ def register_error_handlers(app: FastAPI) -> None:
             status_code=422,
             content=error_body("VALIDATION_ERROR", "Request validation failed.", exc.errors()),
         )
-

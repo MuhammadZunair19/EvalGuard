@@ -31,4 +31,3 @@ def calculate_retrieval_metrics(
         recall_at_k=hit,
         mrr=1 / first_rank if first_rank else 0.0,
     )
-

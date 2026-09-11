@@ -21,4 +21,3 @@ class RAGResponse(BaseModel):
     retrieval_latency_ms: float
     generation_latency_ms: float
     total_latency_ms: float
-

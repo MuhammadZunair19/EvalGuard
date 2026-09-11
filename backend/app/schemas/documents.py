@@ -18,4 +18,3 @@ class IndexResponse(BaseModel):
     document_id: str
     chunk_count: int
     indexing_status: str
-

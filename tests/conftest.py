@@ -9,7 +9,11 @@ from backend.app.core.config import Settings, get_settings
 from backend.app.db.base import Base
 from backend.app.db.session import get_session
 from backend.app.main import app
-from backend.app.providers.fakes import DeterministicEmbeddingProvider, DeterministicLLMProvider, InMemoryVectorStore
+from backend.app.providers.fakes import (
+    DeterministicEmbeddingProvider,
+    DeterministicLLMProvider,
+    InMemoryVectorStore,
+)
 
 
 @pytest_asyncio.fixture
@@ -44,4 +48,3 @@ async def client(tmp_path) -> AsyncIterator[AsyncClient]:
         yield http
     app.dependency_overrides.clear()
     await engine.dispose()
-

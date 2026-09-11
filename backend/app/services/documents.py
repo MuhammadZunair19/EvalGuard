@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import re
 from pathlib import Path
 
@@ -35,22 +36,30 @@ class DocumentService:
             raise AppError("INVALID_DOCUMENT", "Only PDF, TXT, and Markdown files are supported.")
         content = await file.read(self.settings.max_upload_size + 1)
         if len(content) > self.settings.max_upload_size:
-            raise AppError("DOCUMENT_TOO_LARGE", "The document exceeds the configured upload limit.", 413)
+            raise AppError(
+                "DOCUMENT_TOO_LARGE", "The document exceeds the configured upload limit.", 413
+            )
         if not content:
             raise AppError("EMPTY_DOCUMENT", "The uploaded document is empty.")
-        document = Document(filename=Path(file.filename or "document").name, file_type=suffix[1:], storage_path="")
+        document = Document(
+            filename=Path(file.filename or "document").name, file_type=suffix[1:], storage_path=""
+        )
         self.session.add(document)
         await self.session.flush()
         self.settings.upload_path.mkdir(parents=True, exist_ok=True)
         path = self.settings.upload_path / f"{document.id}{suffix}"
-        path.write_bytes(content)
+        await asyncio.to_thread(path.write_bytes, content)
         document.storage_path = str(path)
         await self.session.commit()
         await self.session.refresh(document)
         return document
 
     async def list(self) -> list[Document]:
-        return list((await self.session.scalars(select(Document).order_by(Document.created_at.desc()))).all())
+        return list(
+            (
+                await self.session.scalars(select(Document).order_by(Document.created_at.desc()))
+            ).all()
+        )
 
     async def get(self, document_id: str) -> Document:
         document = await self.session.get(Document, document_id)
@@ -61,7 +70,7 @@ class DocumentService:
     async def delete(self, document_id: str) -> None:
         document = await self.get(document_id)
         await self.vector_store.delete_document(document_id)
-        Path(document.storage_path).unlink(missing_ok=True)
+        await asyncio.to_thread(Path(document.storage_path).unlink, missing_ok=True)
         await self.session.delete(document)
         await self.session.commit()
 
@@ -79,7 +88,17 @@ class DocumentService:
             self.session.add(chunk)
             await self.session.flush()
             chunk.vector_id = chunk.id
-            records.append(VectorRecord(chunk.id, content, {"document_id": document.id, "document_name": document.filename, "position": position}))
+            records.append(
+                VectorRecord(
+                    chunk.id,
+                    content,
+                    {
+                        "document_id": document.id,
+                        "document_name": document.filename,
+                        "position": position,
+                    },
+                )
+            )
         await self.vector_store.upsert(records, await self.embeddings.embed(chunks))
         document.chunk_count = len(chunks)
         document.indexing_status = IndexingStatus.INDEXED
@@ -89,6 +108,10 @@ class DocumentService:
 
     @staticmethod
     async def _extract_text(path: Path, file_type: str) -> str:
+        return await asyncio.to_thread(DocumentService._extract_text_sync, path, file_type)
+
+    @staticmethod
+    def _extract_text_sync(path: Path, file_type: str) -> str:
         if file_type == "pdf":
             return "\n".join(page.extract_text() or "" for page in PdfReader(path).pages)
         return path.read_text(encoding="utf-8")

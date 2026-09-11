@@ -8,7 +8,9 @@ PROMPT_TEMPLATE = "Context:\n{context}\n\nQuestion: {question}\nAnswer with conc
 
 
 class RAGService:
-    def __init__(self, llm: LLMProvider, embeddings: EmbeddingProvider, vectors: VectorStore) -> None:
+    def __init__(
+        self, llm: LLMProvider, embeddings: EmbeddingProvider, vectors: VectorStore
+    ) -> None:
         self.llm = llm
         self.embeddings = embeddings
         self.vectors = vectors
@@ -20,7 +22,9 @@ class RAGService:
         retrieved = perf_counter()
         context = "\n\n".join(f"[{index}] {item.text}" for index, item in enumerate(records, 1))
         answer = await self.llm.generate(
-            PROMPT_TEMPLATE.format(context=context or "No relevant context was retrieved.", question=question),
+            PROMPT_TEMPLATE.format(
+                context=context or "No relevant context was retrieved.", question=question
+            ),
             SYSTEM_PROMPT,
         )
         finished = perf_counter()
@@ -41,4 +45,3 @@ class RAGService:
             generation_latency_ms=round((finished - retrieved) * 1000, 2),
             total_latency_ms=round((finished - started) * 1000, 2),
         )
-

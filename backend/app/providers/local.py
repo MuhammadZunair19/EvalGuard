@@ -26,7 +26,12 @@ class OllamaLLMProvider:
         async with httpx.AsyncClient(timeout=120) as client:
             response = await client.post(
                 f"{self.base_url}/api/generate",
-                json={"model": self.model, "prompt": prompt, "system": system_prompt, "stream": False},
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "system": system_prompt,
+                    "stream": False,
+                },
             )
             response.raise_for_status()
             return str(response.json()["response"]).strip()

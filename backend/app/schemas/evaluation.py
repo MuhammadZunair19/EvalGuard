@@ -30,7 +30,18 @@ class TestCaseCreate(BaseModel):
     expected_chunk: str | None = None
     tags: list[str] = []
     difficulty: Literal["easy", "medium", "hard"] = "medium"
-    test_type: Literal["factual", "missing-context", "hallucination", "retrieval", "adversarial", "prompt-injection", "edge-case", "consistency", "latency", "regression"]
+    test_type: Literal[
+        "factual",
+        "missing-context",
+        "hallucination",
+        "retrieval",
+        "adversarial",
+        "prompt-injection",
+        "edge-case",
+        "consistency",
+        "latency",
+        "regression",
+    ]
     repetitions: int = Field(default=1, ge=1, le=10)
 
     @model_validator(mode="after")
@@ -57,7 +68,21 @@ class TestCaseUpdate(BaseModel):
     expected_chunk: str | None = None
     tags: list[str] | None = None
     difficulty: Literal["easy", "medium", "hard"] | None = None
-    test_type: Literal["factual", "missing-context", "hallucination", "retrieval", "adversarial", "prompt-injection", "edge-case", "consistency", "latency", "regression"] | None = None
+    test_type: (
+        Literal[
+            "factual",
+            "missing-context",
+            "hallucination",
+            "retrieval",
+            "adversarial",
+            "prompt-injection",
+            "edge-case",
+            "consistency",
+            "latency",
+            "regression",
+        ]
+        | None
+    ) = None
     repetitions: int | None = Field(default=None, ge=1, le=10)
 
 

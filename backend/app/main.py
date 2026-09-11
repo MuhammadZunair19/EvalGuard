@@ -19,4 +19,3 @@ app.add_middleware(
 )
 app.include_router(router, prefix=settings.api_prefix)
 register_error_handlers(app)
-

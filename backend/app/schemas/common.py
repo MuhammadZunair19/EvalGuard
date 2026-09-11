@@ -10,4 +10,3 @@ class ORMModel(BaseModel):
 class CreatedModel(ORMModel):
     id: str
     created_at: datetime
-

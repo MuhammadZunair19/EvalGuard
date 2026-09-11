@@ -13,7 +13,9 @@ router = APIRouter(tags=["reporting"])
 
 @router.get("/dashboard")
 async def dashboard(session: AsyncSession = Depends(get_session)) -> dict:
-    runs = list((await session.scalars(select(EvaluationRun).order_by(EvaluationRun.created_at))).all())
+    runs = list(
+        (await session.scalars(select(EvaluationRun).order_by(EvaluationRun.created_at))).all()
+    )
     latest = runs[-1] if runs else None
     trends = [
         {
@@ -31,9 +33,15 @@ async def dashboard(session: AsyncSession = Depends(get_session)) -> dict:
         "total_runs": len(runs),
         "latest_pass_rate": latest.pass_percentage if latest else 0,
         "ai_quality_score": round(
-            sum(latest.summary.get(name, 0) for name in ["faithfulness", "answer_relevance", "answer_correctness"]) / 3,
+            sum(
+                latest.summary.get(name, 0)
+                for name in ["faithfulness", "answer_relevance", "answer_correctness"]
+            )
+            / 3,
             4,
-        ) if latest else 0,
+        )
+        if latest
+        else 0,
         "hallucination_rate": latest.summary.get("hallucination_rate", 0) if latest else 0,
         "retrieval_hit_rate": latest.summary.get("hit_rate", 0) if latest else 0,
         "p95_latency_ms": latest.summary.get("latency", {}).get("p95", 0) if latest else 0,
@@ -56,7 +64,13 @@ async def run_results(run_id: str, session: AsyncSession = Depends(get_session))
     ).all()
     results = []
     for result, case in rows:
-        metrics = list((await session.scalars(select(MetricResult).where(MetricResult.test_result_id == result.id))).all())
+        metrics = list(
+            (
+                await session.scalars(
+                    select(MetricResult).where(MetricResult.test_result_id == result.id)
+                )
+            ).all()
+        )
         results.append(
             {
                 "id": result.id,
@@ -72,10 +86,26 @@ async def run_results(run_id: str, session: AsyncSession = Depends(get_session))
                 "latency_ms": result.latency_ms,
                 "unsupported_claims": result.unsupported_claims,
                 "metrics": [
-                    {"metric": metric.metric, "score": metric.score, "passed": metric.passed, "threshold": metric.threshold, "details": metric.details}
+                    {
+                        "metric": metric.metric,
+                        "score": metric.score,
+                        "passed": metric.passed,
+                        "threshold": metric.threshold,
+                        "details": metric.details,
+                    }
                     for metric in metrics
                 ],
             }
         )
     failures = Counter(item["failure_type"] for item in results if item["failure_type"])
-    return {"run": {"id": run.id, "status": run.status, "model": run.model, "summary": run.summary, "pass_percentage": run.pass_percentage}, "failure_breakdown": failures, "results": results}
+    return {
+        "run": {
+            "id": run.id,
+            "status": run.status,
+            "model": run.model,
+            "summary": run.summary,
+            "pass_percentage": run.pass_percentage,
+        },
+        "failure_breakdown": failures,
+        "results": results,
+    }

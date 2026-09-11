@@ -5,7 +5,9 @@ from backend.app.schemas.rag import RetrievedSource
 
 
 def source(name: str, chunk: str, score: float = 0.9) -> RetrievedSource:
-    return RetrievedSource(document_id=name, document_name=name, chunk_id=chunk, content="text", similarity_score=score)
+    return RetrievedSource(
+        document_id=name, document_name=name, chunk_id=chunk, content="text", similarity_score=score
+    )
 
 
 @pytest.mark.regression
@@ -23,7 +25,8 @@ def test_retrieval_metrics_report_rank_and_precision():
 
 @pytest.mark.regression
 def test_wrong_document_is_retrieval_failure():
-    metrics = calculate_retrieval_metrics([source("company_news.md", "1")], "employee_handbook.md", None)
+    metrics = calculate_retrieval_metrics(
+        [source("company_news.md", "1")], "employee_handbook.md", None
+    )
     assert metrics.hit_rate == 0
     assert metrics.mrr == 0
-

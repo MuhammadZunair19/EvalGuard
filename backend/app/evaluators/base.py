@@ -29,7 +29,27 @@ class Evaluator:
 
 
 def tokens(text: str) -> set[str]:
-    stop = {"a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in", "is", "it", "of", "on", "or", "the", "to", "with"}
+    stop = {
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "for",
+        "from",
+        "in",
+        "is",
+        "it",
+        "of",
+        "on",
+        "or",
+        "the",
+        "to",
+        "with",
+    }
     return {word for word in re.findall(r"[a-z0-9]+", text.lower()) if word not in stop}
 
 
@@ -40,7 +60,10 @@ def overlap(left: str, right: str) -> float:
     return len(left_tokens & right_tokens) / len(left_tokens)
 
 
-def output(metric: str, score: float, threshold: float, details: str, unsupported: list[str] | None = None) -> EvaluationOutput:
+def output(
+    metric: str, score: float, threshold: float, details: str, unsupported: list[str] | None = None
+) -> EvaluationOutput:
     bounded = round(max(0.0, min(1.0, score)), 4)
-    return EvaluationOutput(metric, bounded, bounded >= threshold, threshold, details, unsupported or [])
-
+    return EvaluationOutput(
+        metric, bounded, bounded >= threshold, threshold, details, unsupported or []
+    )

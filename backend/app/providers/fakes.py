@@ -25,7 +25,12 @@ class InMemoryVectorStore:
         self.items: dict[str, tuple[VectorRecord, list[float]]] = {}
 
     async def upsert(self, records: list[VectorRecord], embeddings: list[list[float]]) -> None:
-        self.items.update({record.id: (record, vector) for record, vector in zip(records, embeddings, strict=True)})
+        self.items.update(
+            {
+                record.id: (record, vector)
+                for record, vector in zip(records, embeddings, strict=True)
+            }
+        )
 
     async def query(self, embedding: list[float], top_k: int) -> list[VectorRecord]:
         scored = []
@@ -51,4 +56,3 @@ class DeterministicLLMProvider:
             if marker.lower() in prompt.lower():
                 return answer
         return "I don't have enough information in the provided documents."
-

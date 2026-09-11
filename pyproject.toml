@@ -6,21 +6,24 @@ requires-python = ">=3.12"
 dependencies = [
   "alembic>=1.13,<2",
   "asyncpg>=0.29,<1",
-  "chromadb>=0.5,<1",
   "fastapi>=0.115,<1",
   "greenlet>=3.1,<4",
   "httpx>=0.27,<1",
-  "langchain>=0.3,<1",
   "pydantic-settings>=2.5,<3",
   "python-multipart>=0.0.12,<1",
   "pypdf>=5,<6",
-  "sentence-transformers>=3,<4",
   "sqlalchemy>=2.0,<3",
   "structlog>=24,<26",
   "uvicorn[standard]>=0.30,<1",
 ]
 
 [project.optional-dependencies]
+local-ai = [
+  "chromadb>=0.5,<1",
+  "langchain>=0.3,<1",
+  "ragas>=0.2,<1",
+  "sentence-transformers>=3,<4",
+]
 dev = [
   "aiosqlite>=0.20,<1",
   "pytest>=8.3,<9",
@@ -33,6 +36,7 @@ dev = [
 asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
+  "ci_safe: deterministic test suitable for CI",
   "api: HTTP API behavior",
   "integration: multi-component integration",
   "ai: model-dependent AI evaluation",
@@ -47,4 +51,4 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "ASYNC"]
-
+ignore = ["B008", "E501"]

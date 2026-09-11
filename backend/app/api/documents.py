@@ -20,7 +20,9 @@ def service(
 
 
 @router.post("", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
-async def upload_document(file: UploadFile = File(...), documents: DocumentService = Depends(service)):
+async def upload_document(
+    file: UploadFile = File(...), documents: DocumentService = Depends(service)
+):
     return await documents.upload(file)
 
 
@@ -35,7 +37,9 @@ async def get_document(document_id: str, documents: DocumentService = Depends(se
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_document(document_id: str, documents: DocumentService = Depends(service)) -> Response:
+async def delete_document(
+    document_id: str, documents: DocumentService = Depends(service)
+) -> Response:
     await documents.delete(document_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -43,4 +47,8 @@ async def delete_document(document_id: str, documents: DocumentService = Depends
 @router.post("/{document_id}/index", response_model=IndexResponse)
 async def index_document(document_id: str, documents: DocumentService = Depends(service)):
     document = await documents.index(document_id)
-    return IndexResponse(document_id=document.id, chunk_count=document.chunk_count, indexing_status=document.indexing_status)
+    return IndexResponse(
+        document_id=document.id,
+        chunk_count=document.chunk_count,
+        indexing_status=document.indexing_status,
+    )
