@@ -142,8 +142,8 @@ async def upsert_quality_gate(name: str, payload: QualityThresholdUpdate, sessio
 
 
 @router.post("/evaluation-runs", response_model=EvaluationRunResponse, status_code=201)
-async def create_run(payload: EvaluationRunCreate, session: AsyncSession = Depends(get_session), settings: Settings = Depends(get_settings)):
-    llm, embeddings, vectors = get_providers()
+async def create_run(payload: EvaluationRunCreate, session: AsyncSession = Depends(get_session), settings: Settings = Depends(get_settings), providers=Depends(get_providers)):
+    llm, embeddings, vectors = providers
     return await EvaluationService(session, RAGService(llm, embeddings, vectors), settings).execute(payload)
 
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from pathlib import Path
 
@@ -107,4 +109,3 @@ class DocumentService:
                 break
             start = max(end - overlap, start + 1)
         return chunks
-

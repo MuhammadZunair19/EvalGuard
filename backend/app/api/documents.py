@@ -13,8 +13,9 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 def service(
     session: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
+    providers=Depends(get_providers),
 ) -> DocumentService:
-    _, embeddings, vectors = get_providers()
+    _, embeddings, vectors = providers
     return DocumentService(session, settings, embeddings, vectors)
 
 
@@ -43,4 +44,3 @@ async def delete_document(document_id: str, documents: DocumentService = Depends
 async def index_document(document_id: str, documents: DocumentService = Depends(service)):
     document = await documents.index(document_id)
     return IndexResponse(document_id=document.id, chunk_count=document.chunk_count, indexing_status=document.indexing_status)
-

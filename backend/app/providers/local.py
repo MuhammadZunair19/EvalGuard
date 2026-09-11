@@ -1,8 +1,6 @@
 import asyncio
 
-import chromadb
 import httpx
-from sentence_transformers import SentenceTransformer
 
 from backend.app.core.config import Settings
 from backend.app.providers.base import VectorRecord
@@ -10,6 +8,8 @@ from backend.app.providers.base import VectorRecord
 
 class SentenceTransformerEmbeddingProvider:
     def __init__(self, model_name: str) -> None:
+        from sentence_transformers import SentenceTransformer
+
         self.model = SentenceTransformer(model_name)
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
@@ -34,6 +34,8 @@ class OllamaLLMProvider:
 
 class ChromaVectorStore:
     def __init__(self, path: str) -> None:
+        import chromadb
+
         client = chromadb.PersistentClient(path=path)
         self.collection = client.get_or_create_collection("evalguard_documents")
 
@@ -78,4 +80,3 @@ def build_local_providers(settings: Settings):
         SentenceTransformerEmbeddingProvider(settings.embedding_model),
         ChromaVectorStore(str(settings.chroma_path)),
     )
-
