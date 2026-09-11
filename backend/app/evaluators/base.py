@@ -9,6 +9,7 @@ class EvaluationInput:
     contexts: list[str]
     expected_answer: str | None = None
     expected_facts: list[str] = field(default_factory=list)
+    expected_behavior: str | None = None
 
 
 @dataclass(frozen=True)

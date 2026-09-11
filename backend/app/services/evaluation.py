@@ -88,7 +88,12 @@ class EvaluationService:
             response = rag_outputs[0]
             contexts = [source.content for source in response.sources]
             item = EvaluationInput(
-                case.question, response.answer, contexts, case.expected_answer, case.expected_facts
+                case.question,
+                response.answer,
+                contexts,
+                case.expected_answer,
+                case.expected_facts,
+                case.expected_behavior,
             )
             results = {
                 evaluator.metric: evaluator.evaluate(item, thresholds.get(evaluator.metric, 0.8))

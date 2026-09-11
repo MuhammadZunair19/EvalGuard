@@ -19,6 +19,7 @@ def test_correct_grounded_answer_passes_core_metrics():
         contexts=["Employees receive 25 annual leave days per year."],
         expected_answer="25 annual leave days",
     )
+    assert AnswerRelevanceEvaluator().evaluate(item, 0.8).passed
     assert CorrectnessEvaluator().evaluate(item, 0.8).passed
     assert FaithfulnessEvaluator().evaluate(item, 0.85).passed
     assert AnswerRelevanceEvaluator().evaluate(item, 0.8).passed
@@ -36,6 +37,20 @@ def test_unsupported_personal_fact_is_a_hallucination():
     assert not result.passed
     assert result.score == 1
     assert result.unsupported_claims == ["The CEO's daughter is Sarah."]
+
+
+@pytest.mark.ci_safe
+def test_safe_abstention_passes_missing_context_evaluation():
+    item = EvaluationInput(
+        question="What is the CEO's daughter's name?",
+        answer="I don't have enough information in the provided documents.",
+        contexts=["The handbook contains employment policies."],
+        expected_behavior="State that the information is unavailable.",
+    )
+    assert CorrectnessEvaluator().evaluate(item, 0.8).passed
+    assert FaithfulnessEvaluator().evaluate(item, 0.85).passed
+    assert HallucinationEvaluator().evaluate(item, 0.05).passed
+    assert CitationValidator().evaluate(item, 1).passed
 
 
 @pytest.mark.regression
