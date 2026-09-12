@@ -3,6 +3,7 @@ import asyncio
 import httpx
 
 from backend.app.core.config import Settings
+from backend.app.core.errors import AppError
 from backend.app.providers.base import VectorRecord
 
 
@@ -19,27 +20,45 @@ class SentenceTransformerEmbeddingProvider:
 
 class OllamaLLMProvider:
     def __init__(
-        self, base_url: str, model: str, num_predict: int = 128, keep_alive: str = "30m"
+        self,
+        base_url: str,
+        model: str,
+        num_predict: int = 128,
+        keep_alive: str = "30m",
+        client: httpx.AsyncClient | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.num_predict = num_predict
         self.keep_alive = keep_alive
-        self.client = httpx.AsyncClient(timeout=180)
+        self.client = client or httpx.AsyncClient(timeout=180)
 
     async def generate(self, prompt: str, system_prompt: str) -> str:
-        response = await self.client.post(
-            f"{self.base_url}/api/generate",
-            json={
-                "model": self.model,
-                "prompt": prompt,
-                "system": system_prompt,
-                "stream": False,
-                "keep_alive": self.keep_alive,
-                "options": {"temperature": 0, "num_predict": self.num_predict},
-            },
-        )
-        response.raise_for_status()
+        try:
+            response = await self.client.post(
+                f"{self.base_url}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "system": system_prompt,
+                    "stream": False,
+                    "keep_alive": self.keep_alive,
+                    "options": {"temperature": 0, "num_predict": self.num_predict},
+                },
+            )
+            response.raise_for_status()
+        except httpx.RequestError as exc:
+            raise AppError(
+                "OLLAMA_UNAVAILABLE",
+                f"Could not connect to Ollama at {self.base_url}. Check the Docker Ollama URL and ensure Ollama is running.",
+                503,
+            ) from exc
+        except httpx.HTTPStatusError as exc:
+            raise AppError(
+                "OLLAMA_REQUEST_FAILED",
+                f"Ollama rejected the request for model {self.model}.",
+                502,
+            ) from exc
         return str(response.json()["response"]).strip()
 
 

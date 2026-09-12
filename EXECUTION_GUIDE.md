@@ -139,6 +139,7 @@ Default configuration:
 ```env
 DATABASE_URL=postgresql+asyncpg://evalguard:evalguard@localhost:5432/evalguard
 OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_DOCKER_BASE_URL=http://host.docker.internal:11434
 OLLAMA_MODEL=llama3.1:8b
 OLLAMA_NUM_PREDICT=128
 OLLAMA_KEEP_ALIVE=30m
