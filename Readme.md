@@ -195,6 +195,12 @@ For API development or CI-style checks, set `PROVIDER_MODE=deterministic` in `.e
 
 Scores are stored per case with their threshold and explanation. Run summaries retain averages, min/max, P50/P95 latency, retrieval metrics, and the exact gates that failed.
 
+Local Ollama evaluations are intentionally limited to one active run so concurrent suites do not
+compete for the same model. `OLLAMA_NUM_PREDICT` (default `128`) limits answer length and
+`OLLAMA_KEEP_ALIVE` (default `30m`) avoids reloading the model between cases. The P95 latency gate is
+evaluated at run level; it only marks an individual case as a latency failure when that case has the
+`latency` test type.
+
 ## Example evaluation evidence
 
 ```json

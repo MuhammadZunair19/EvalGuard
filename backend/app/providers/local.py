@@ -18,23 +18,29 @@ class SentenceTransformerEmbeddingProvider:
 
 
 class OllamaLLMProvider:
-    def __init__(self, base_url: str, model: str) -> None:
+    def __init__(
+        self, base_url: str, model: str, num_predict: int = 128, keep_alive: str = "30m"
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
+        self.num_predict = num_predict
+        self.keep_alive = keep_alive
+        self.client = httpx.AsyncClient(timeout=180)
 
     async def generate(self, prompt: str, system_prompt: str) -> str:
-        async with httpx.AsyncClient(timeout=120) as client:
-            response = await client.post(
-                f"{self.base_url}/api/generate",
-                json={
-                    "model": self.model,
-                    "prompt": prompt,
-                    "system": system_prompt,
-                    "stream": False,
-                },
-            )
-            response.raise_for_status()
-            return str(response.json()["response"]).strip()
+        response = await self.client.post(
+            f"{self.base_url}/api/generate",
+            json={
+                "model": self.model,
+                "prompt": prompt,
+                "system": system_prompt,
+                "stream": False,
+                "keep_alive": self.keep_alive,
+                "options": {"temperature": 0, "num_predict": self.num_predict},
+            },
+        )
+        response.raise_for_status()
+        return str(response.json()["response"]).strip()
 
 
 class ChromaVectorStore:
@@ -81,7 +87,12 @@ class ChromaVectorStore:
 
 def build_local_providers(settings: Settings):
     return (
-        OllamaLLMProvider(settings.ollama_base_url, settings.ollama_model),
+        OllamaLLMProvider(
+            settings.ollama_base_url,
+            settings.ollama_model,
+            settings.ollama_num_predict,
+            settings.ollama_keep_alive,
+        ),
         SentenceTransformerEmbeddingProvider(settings.embedding_model),
         ChromaVectorStore(str(settings.chroma_path)),
     )

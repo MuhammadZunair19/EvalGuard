@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -32,6 +34,7 @@ from backend.app.services.evaluation import EvaluationService, compare_runs
 from backend.app.services.rag import RAGService
 
 router = APIRouter(tags=["evaluation"])
+evaluation_lock = asyncio.Lock()
 
 
 @router.post("/datasets", response_model=DatasetResponse, status_code=201)
@@ -197,10 +200,17 @@ async def create_run(
     settings: Settings = Depends(get_settings),
     providers=Depends(get_providers),
 ):
+    if evaluation_lock.locked():
+        raise AppError(
+            "EVALUATION_ALREADY_RUNNING",
+            "Another evaluation is already running. Wait for it to finish before starting a new one.",
+            409,
+        )
     llm, embeddings, vectors = providers
-    return await EvaluationService(session, RAGService(llm, embeddings, vectors), settings).execute(
-        payload
-    )
+    async with evaluation_lock:
+        return await EvaluationService(
+            session, RAGService(llm, embeddings, vectors), settings
+        ).execute(payload)
 
 
 @router.get("/evaluation-runs", response_model=list[EvaluationRunResponse])

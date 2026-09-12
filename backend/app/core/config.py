@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://evalguard:evalguard@localhost:5432/evalguard"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.1:8b"
+    ollama_num_predict: int = Field(default=128, ge=16, le=4096)
+    ollama_keep_alive: str = "30m"
     embedding_model: str = "all-MiniLM-L6-v2"
     provider_mode: str = "local"
     chroma_path: Path = Path("backend/data/chroma")

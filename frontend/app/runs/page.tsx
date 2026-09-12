@@ -94,6 +94,10 @@ export default function RunsPage() {
             {busy ? "Evaluating…" : "Run evaluation"}
           </button>
         </form>
+        <p className="muted">
+          Local Ollama evaluations run one at a time. For the demo handbook, Top K 2 is faster and
+          usually more precise than retrieving five chunks.
+        </p>
       </Card>
       <Card>
         <div className="card-title">
@@ -139,4 +143,3 @@ export default function RunsPage() {
     </>
   );
 }
-

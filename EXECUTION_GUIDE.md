@@ -136,6 +136,8 @@ Default configuration:
 DATABASE_URL=postgresql+asyncpg://evalguard:evalguard@localhost:5432/evalguard
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.1:8b
+OLLAMA_NUM_PREDICT=128
+OLLAMA_KEEP_ALIVE=30m
 EMBEDDING_MODEL=all-MiniLM-L6-v2
 PROVIDER_MODE=local
 CHROMA_PATH=./backend/data/chroma
@@ -340,6 +342,11 @@ Default gates:
 | Consistency | ≥ 0.80 |
 | P95 latency | ≤ 3000 ms |
 
+The 3000 ms value is a release-performance target, not a promise that an 8B model will run that
+quickly on CPU-only hardware. Functional cases are scored on retrieval and answer quality; only a
+test case whose type is `latency` can receive `Latency Failure`. P95 latency can still fail the
+overall run quality gate.
+
 ### 6.6 Execute an evaluation run
 
 Open `/runs`.
@@ -349,6 +356,12 @@ Open `/runs`.
 3. Keep the model equal to the configured `OLLAMA_MODEL`.
 4. Choose `top_k` between 1 and 20.
 5. Click **Run evaluation**.
+
+Only one evaluation can use the local model at a time. A second request is rejected with a clear
+`EVALUATION_ALREADY_RUNNING` response instead of competing for CPU/RAM and slowing both runs down.
+For the small demo handbook, start with **Top K = 2**. The backend keeps Ollama warm for 30 minutes
+and limits each concise answer to 128 generated tokens; both values can be changed with
+`OLLAMA_KEEP_ALIVE` and `OLLAMA_NUM_PREDICT`.
 
 Runs currently execute synchronously. A 25-case local-model run can take several minutes. Do not refresh while the request is running.
 
