@@ -66,6 +66,10 @@ docker compose up --build -d
 docker compose ps
 ```
 
+The first backend build downloads the CPU-only embedding runtime. Ollama uses the host GPU directly,
+so the backend image does not install CUDA-enabled PyTorch packages. Docker caches dependencies
+separately from the application source, making later source-only rebuilds much faster.
+
 Wait until PostgreSQL is healthy and the backend and frontend are running. Inspect startup logs if needed:
 
 ```bash

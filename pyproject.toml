@@ -20,8 +20,6 @@ dependencies = [
 [project.optional-dependencies]
 local-ai = [
   "chromadb>=0.5,<1",
-  "langchain>=0.3,<1",
-  "ragas>=0.2,<1",
   "sentence-transformers>=3,<4",
 ]
 dev = [

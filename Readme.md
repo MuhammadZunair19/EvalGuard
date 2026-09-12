@@ -79,6 +79,10 @@ Prerequisites: Docker Desktop with Compose and Ollama installed on the host.
    docker compose ps
    ```
 
+   The backend image installs a CPU-only PyTorch wheel for document embeddings because Ollama runs
+   LLM inference on the host GPU. Dependencies are cached separately from application source, so
+   ordinary code rebuilds skip the expensive installation layer.
+
 3. Seed the knowledge base and evaluation suite after the backend is healthy:
 
    ```bash
