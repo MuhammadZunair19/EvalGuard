@@ -57,6 +57,8 @@ The production provider mode is fully local and requires no paid API.
 
 ## Installation and startup
 
+For a complete copy/paste runbook covering every feature and ready-made form values, see [EXECUTION_GUIDE.md](EXECUTION_GUIDE.md).
+
 Choose either the Docker path or the local-development path. Do not combine their PostgreSQL/backend processes on the same ports.
 
 ### Option A: Docker Compose
