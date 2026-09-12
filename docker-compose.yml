@@ -23,6 +23,7 @@ services:
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1:8b}
       OLLAMA_NUM_PREDICT: ${OLLAMA_NUM_PREDICT:-128}
       OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
+      DEFAULT_TOP_K: ${DEFAULT_TOP_K:-2}
       CHROMA_PATH: /app/runtime/chroma
       UPLOAD_PATH: /app/runtime/uploads
     ports: ["8000:8000"]
