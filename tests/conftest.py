@@ -33,6 +33,7 @@ async def client(tmp_path) -> AsyncIterator[AsyncClient]:
     )
     settings = Settings(
         database_url="sqlite+aiosqlite:///:memory:",
+        ollama_model="llama3.1:8b",
         upload_path=tmp_path / "uploads",
         chroma_path=tmp_path / "chroma",
     )

@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { Badge, Card, Empty, ErrorNotice, Header } from "@/components/ui";
 import { api } from "@/lib/api";
-import { Dataset, Run } from "@/lib/types";
+import { Dataset, Run, RuntimeConfig } from "@/lib/types";
 
 type PromptVersion = { id: string; name: string; version: number };
 
@@ -13,6 +13,7 @@ export default function RunsPage() {
   const [runs, setRuns] = useState<Run[]>([]);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [prompts, setPrompts] = useState<PromptVersion[]>([]);
+  const [runtime, setRuntime] = useState<RuntimeConfig>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,11 +22,13 @@ export default function RunsPage() {
       api<Run[]>("/evaluation-runs"),
       api<Dataset[]>("/datasets"),
       api<PromptVersion[]>("/prompts"),
+      api<RuntimeConfig>("/health"),
     ])
-      .then(([runItems, datasetItems, promptItems]) => {
+      .then(([runItems, datasetItems, promptItems, runtimeConfig]) => {
         setRuns(runItems);
         setDatasets(datasetItems);
         setPrompts(promptItems);
+        setRuntime(runtimeConfig);
       })
       .catch((reason) => setError(reason.message));
 
@@ -81,16 +84,22 @@ export default function RunsPage() {
               </option>
             ))}
           </select>
-          <input aria-label="Model" name="model" defaultValue="llama3.1:8b" />
           <input
+            aria-label="Model"
+            name="model"
+            value={runtime?.ollama_model ?? "Loading model…"}
+            readOnly
+          />
+          <input
+            key={runtime?.default_top_k}
             aria-label="Top K"
             name="top_k"
             type="number"
             min="1"
             max="20"
-            defaultValue="5"
+            defaultValue={runtime?.default_top_k ?? 2}
           />
-          <button className="button" disabled={busy}>
+          <button className="button" disabled={busy || !runtime}>
             {busy ? "Evaluating…" : "Run evaluation"}
           </button>
         </form>

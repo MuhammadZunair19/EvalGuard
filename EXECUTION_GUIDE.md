@@ -353,7 +353,8 @@ Open `/runs`.
 
 1. Select the seeded or custom dataset.
 2. Select a prompt version or the default grounded prompt.
-3. Keep the model equal to the configured `OLLAMA_MODEL`.
+3. Confirm the read-only Model field matches the backend's configured `OLLAMA_MODEL`. The form
+   loads this value automatically from the backend health endpoint.
 4. Choose `top_k` between 1 and 20.
 5. Click **Run evaluation**.
 

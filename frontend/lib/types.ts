@@ -7,4 +7,4 @@ export type Dashboard = {
 export type Document = { id: string; filename: string; file_type: string; created_at: string; chunk_count: number; indexing_status: string };
 export type Dataset = { id: string; name: string; description?: string; created_at: string };
 export type Run = { id: string; dataset_id: string; model: string; status: string; test_count: number; pass_count: number; fail_count: number; pass_percentage: number; summary: Record<string, any>; created_at: string };
-
+export type RuntimeConfig = { status: string; service: string; ollama_model: string; provider_mode: string; default_top_k: number };

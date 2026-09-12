@@ -5,6 +5,7 @@ async function mockApi(page: Page) {
   const runs = [{ id: "run-current-0001", dataset_id: "dataset-1", model: "llama3.1:8b", status: "failed", test_count: 25, pass_count: 23, fail_count: 2, pass_percentage: 92, summary: { faithfulness: .91, hit_rate: .96, hallucination_rate: .04, latency: { p95: 1180 } }, created_at: new Date().toISOString() }];
   await page.route("http://localhost:8000/api/v1/**", async route => {
     const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/health")) return route.fulfill({ json: { status: "healthy", service: "evalguard-api", ollama_model: "llama3.2:3b", provider_mode: "local", default_top_k: 2 } });
     if (path.endsWith("/dashboard")) return route.fulfill({ json: { total_runs: 4, latest_pass_rate: 92, ai_quality_score: .9, hallucination_rate: .04, retrieval_hit_rate: .96, p95_latency_ms: 1180, trends: [{ id: "1", timestamp: new Date().toISOString(), pass_rate: 92, faithfulness: .91, answer_relevance: .89, hallucination_rate: .04, p95_latency_ms: 1180 }] } });
     if (path.endsWith("/documents") && route.request().method() === "GET") return route.fulfill({ json: [{ id: "doc-1", filename: "employee_handbook.md", file_type: "md", created_at: new Date().toISOString(), chunk_count: 4, indexing_status: "indexed" }] });
     if (path.endsWith("/datasets")) return route.fulfill({ status: route.request().method() === "POST" ? 201 : 200, json: datasets });
@@ -38,6 +39,8 @@ test("creates a dataset through the critical authoring flow", async ({ page }) =
 
 test("executes an evaluation and inspects a hallucination", async ({ page }) => {
   await page.goto("/runs");
+  await expect(page.getByLabel("Model")).toHaveValue("llama3.2:3b");
+  await expect(page.getByLabel("Top K")).toHaveValue("2");
   await page.getByRole("combobox").first().selectOption("dataset-1");
   await page.getByRole("button", { name: "Run evaluation" }).click();
   await page.getByRole("link", { name: "run-curr" }).click();
