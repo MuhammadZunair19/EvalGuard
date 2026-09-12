@@ -10,7 +10,11 @@ def classify_failure(
 ) -> str | None:
     if retrieval_hit == 0:
         return "Retrieval Failure"
-    if latency_ms > latency_limit:
+    # Latency is an aggregate run-level quality gate. It should only determine an
+    # individual case result when that case explicitly tests performance;
+    # otherwise a slow local model can incorrectly turn every functional result
+    # into a latency failure.
+    if test_type == "latency" and latency_ms > latency_limit:
         return "Latency Failure"
     if not metrics["hallucination"].passed:
         return "Prompt Injection Failure" if test_type == "prompt-injection" else "Hallucination"

@@ -69,3 +69,23 @@ def test_wrong_answer_with_correct_retrieval_is_generation_failure():
         "citation_validation": CitationValidator().evaluate(item, 1),
     }
     assert classify_failure(metrics, 1, 100, 3000, "factual") == "Generation Failure"
+
+
+@pytest.mark.regression
+def test_slow_functional_case_is_not_misclassified_as_latency_failure():
+    item = EvaluationInput(
+        question="How many annual leave days do employees receive?",
+        answer="Employees receive 25 annual leave days [1].",
+        contexts=["Employees receive 25 annual leave days."],
+        expected_answer="25 annual leave days",
+    )
+    metrics = {
+        "answer_relevance": AnswerRelevanceEvaluator().evaluate(item, 0.8),
+        "faithfulness": FaithfulnessEvaluator().evaluate(item, 0.85),
+        "answer_correctness": CorrectnessEvaluator().evaluate(item, 0.8),
+        "hallucination": HallucinationEvaluator().evaluate(item, 0.05),
+        "citation_validation": CitationValidator().evaluate(item, 1),
+    }
+
+    assert classify_failure(metrics, 1, 73_000, 3000, "factual") is None
+    assert classify_failure(metrics, 1, 73_000, 3000, "latency") == "Latency Failure"
