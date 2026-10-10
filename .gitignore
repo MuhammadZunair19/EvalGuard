@@ -14,3 +14,4 @@ frontend/.next/
 frontend/node_modules/
 frontend/playwright-report/
 frontend/test-results/
+output/pdf/EvalGuard_Interview_Preparation_Guide.pdf
