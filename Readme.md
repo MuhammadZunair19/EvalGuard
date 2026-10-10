@@ -1,5 +1,7 @@
 # EvalGuard
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 EvalGuard is an AI and RAG quality-assurance framework. It evaluates a local document-grounded assistant with traditional API and browser tests plus metric-based checks for retrieval, generation, hallucination, citations, consistency, regression, and latency.
 
 The bundled RAG service is the system under test; the evaluation engine, evidence, and release gates are the main product.
@@ -329,3 +331,7 @@ Capture the dashboard overview, a failed hallucination detail, and a baseline co
 - exportable JSON/JUnit quality reports
 - production object storage for uploaded documents
 - longitudinal alerting integrations for quality regressions
+
+## License
+
+EvalGuard is open-source software licensed under the [MIT License](LICENSE). You may use, modify, and distribute it subject to the license terms.
